@@ -14,7 +14,6 @@ btn.addEventListener("click", async () => {
     const data = await res.json();
 
     if (data.error) {
-      alert(data.error.message);
       return;
     }
 
