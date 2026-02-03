@@ -24,11 +24,12 @@ btn.addEventListener("click", async () => {
     document.querySelector(".location").innerText =
       data.location.name;
 
-    document.querySelector(".status").textContent =
+    document.querySelector(".status").innerText =
       data.current.condition.text;
 
     document.querySelector(".icon img").src =
-      "https:" + data.current.condition.icon;
+      data.current.condition.icon;
+    document.querySelector(".icon img").style.display = "block";
 
     document.getElementById("time").innerText =
       data.location.localtime.split(" ")[1];
