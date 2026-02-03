@@ -169,6 +169,94 @@
         z-index: 1000;
     }
 
+    /* Loader Overlay */
+    #loader-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.85);
+        display: none;
+        justify-content: center;
+        align-items: center;
+        z-index: 2000;
+        backdrop-filter: blur(5px);
+    }
+
+    #loader-overlay.active {
+        display: flex;
+    }
+
+    .loader-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 30px;
+    }
+
+    /* Retro Loader Animation */
+    .loader {
+        width: 120px;
+        height: 120px;
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .loader-square {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        border: 4px solid transparent;
+        border-top-color: #ff00ff;
+        border-right-color: #00ffff;
+        animation: spin 2s linear infinite;
+        box-shadow: 
+            0 0 20px rgba(255, 0, 255, 0.5),
+            0 0 40px rgba(0, 255, 255, 0.3);
+    }
+
+    .loader-square:nth-child(2) {
+        width: 80%;
+        height: 80%;
+        border-top-color: #00ffff;
+        border-right-color: #ffff00;
+        animation-duration: 1.5s;
+        animation-direction: reverse;
+    }
+
+    .loader-square:nth-child(3) {
+        width: 60%;
+        height: 60%;
+        border-top-color: #ffff00;
+        border-right-color: #ff00ff;
+        animation-duration: 1s;
+    }
+
+    .loader-text {
+        font-size: 32px;
+        color: #00ffff;
+        text-shadow: 
+            0 0 10px #00ffff,
+            0 0 20px #00ffff;
+        text-transform: uppercase;
+        letter-spacing: 3px;
+        animation: textBlink 1s infinite;
+    }
+
+    .loader-dots {
+        display: inline-block;
+        width: 40px;
+        text-align: left;
+    }
+
+    .loader-dots::after {
+        content: '...';
+        animation: dots 1.5s steps(4, end) infinite;
+    }
+
     #header {
         background: rgba(26, 0, 51, 0.8);
         border-bottom: 4px solid #ff00ff;
@@ -243,6 +331,11 @@
 
     #search_btn:active {
         transform: scale(0.95);
+    }
+
+    #search_btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
     }
 
     #display {
@@ -444,6 +537,22 @@
         100% { transform: translate(0); }
     }
 
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+
+    @keyframes textBlink {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.5; }
+    }
+
+    @keyframes dots {
+        0%, 20% { content: '.'; }
+        40% { content: '..'; }
+        60%, 100% { content: '...'; }
+    }
+
     /* Responsive Design */
     @media (max-width: 768px) {
         body::after {
@@ -494,6 +603,15 @@
         .mountains::after {
             border-width: 0 60px 90px 60px;
         }
+
+        .loader {
+            width: 80px;
+            height: 80px;
+        }
+
+        .loader-text {
+            font-size: 24px;
+        }
     }
 </style>
 <body>
@@ -511,6 +629,20 @@
     <div class="mountains"></div>
     <div class="retro-grid"></div>
     <div class="scanlines"></div>
+
+    <!-- Loader Overlay -->
+    <div id="loader-overlay">
+        <div class="loader-container">
+            <div class="loader">
+                <div class="loader-square"></div>
+                <div class="loader-square"></div>
+                <div class="loader-square"></div>
+            </div>
+            <div class="loader-text">
+                LOADING<span class="loader-dots"></span>
+            </div>
+        </div>
+    </div>
 
     <div id="header">
         <div>
@@ -535,6 +667,7 @@
             <div class="status">Status</div>
         </div>
     </div>
+
     <script src="script.js"></script>
 </body>
 </html>
