@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Target Blaster</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            font-family: 'Press Start 2P', cursive;
+            overflow: hidden;
+        }
+
+        /* Animated background particles */
+        .bg-particle {
+            position: fixed;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            pointer-events: none;
+            animation: float 20s infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0) rotate(0deg); }
+            50% { transform: translateY(-100px) rotate(180deg); }
+        }
+
+        h1 {
+            color: #fff;
+            text-shadow: 4px 4px 0 rgba(0, 0, 0, 0.3);
+            margin-bottom: 20px;
+            font-size: 2em;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        #game-container {
+            background: linear-gradient(145deg, #2d3561, #1f2347);
+            border: 6px solid #4a5899;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5),
+                        inset 0 -5px 20px rgba(0, 0, 0, 0.3);
+            padding: 20px;
+            position: relative;
+        }
+
+        #hud {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding: 15px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 10px;
+            border: 2px solid #4a5899;
+        }
+
+        .stat {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .stat-label {
+            color: #88c0d0;
+            font-size: 0.6em;
+            text-transform: uppercase;
+        }
+
+        .stat-value {
+            color: #fff;
+            font-size: 1.2em;
+            text-shadow: 2px 2px 0 rgba(0, 0, 0, 0.5);
+        }
+
+        #score {
+            color: #ffd700;
+        }
+
+        #timer {
+            color: #ff6b6b;
+        }
+
+        #combo {
+            color: #51cf66;
+        }
+
+        #game-area {
+            height: 600px;
+            width: 500px;
+            position: relative;
+            background: linear-gradient(135deg, #1a1f3a 0%, #0f1629 100%);
+            border-radius: 15px;
+            overflow: hidden;
+            border: 3px solid #4a5899;
+            box-shadow: inset 0 0 50px rgba(0, 0, 0, 0.5);
+            cursor: crosshair;
+        }
+
+        /* Grid pattern overlay */
+        #game-area::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image: 
+                linear-gradient(rgba(74, 88, 153, 0.1) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(74, 88, 153, 0.1) 1px, transparent 1px);
+            background-size: 50px 50px;
+            pointer-events: none;
+        }
+
+        #target {
+            position: absolute;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.1s ease;
+            transform-origin: center;
+            animation: targetGlow 1.5s infinite;
+        }
+
+        .target-core {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            background: radial-gradient(circle at 30% 30%, #ff6b6b, #ee5a52, #c92a2a);
+            box-shadow: 
+                0 0 20px rgba(255, 107, 107, 0.6),
+                inset -5px -5px 10px rgba(0, 0, 0, 0.3),
+                inset 5px 5px 10px rgba(255, 150, 150, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        .target-core::before {
+            content: '';
+            position: absolute;
+            width: 30px;
+            height: 30px;
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.6), transparent);
+            border-radius: 50%;
+            top: 8px;
+            left: 8px;
+        }
+
+        .target-core::after {
+            content: '';
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 50%;
+            border: 2px solid #c92a2a;
+        }
+
+        @keyframes targetGlow {
+            0%, 100% { 
+                filter: brightness(1);
+                transform: scale(1);
+            }
+            50% { 
+                filter: brightness(1.2);
+                transform: scale(1.05);
+            }
+        }
+
+        #target:hover {
+            transform: scale(1.15);
+        }
+
+        #target:active {
+            transform: scale(0.95);
+        }
+
+        /* Click effect */
+        .click-effect {
+            position: absolute;
+            pointer-events: none;
+            color: #ffd700;
+            font-size: 1.5em;
+            font-weight: bold;
+            animation: floatUp 1s forwards;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+        }
+
+        @keyframes floatUp {
+            0% {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+            100% {
+                opacity: 0;
+                transform: translateY(-80px) scale(1.5);
+            }
+        }
+
+        /* Explosion effect */
+        .explosion {
+            position: absolute;
+            width: 100px;
+            height: 100px;
+            pointer-events: none;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(255, 107, 107, 0.8), transparent);
+            animation: explode 0.5s forwards;
+        }
+
+        @keyframes explode {
+            0% {
+                transform: scale(0);
+                opacity: 1;
+            }
+            100% {
+                transform: scale(2);
+                opacity: 0;
+            }
+        }
+
+        /* Game over screen */
+        #game-over {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.95);
+            padding: 40px;
+            border-radius: 20px;
+            border: 4px solid #ffd700;
+            text-align: center;
+            display: none;
+            z-index: 1000;
+            box-shadow: 0 0 50px rgba(255, 215, 0, 0.5);
+        }
+
+        #game-over h2 {
+            color: #ffd700;
+            font-size: 1.5em;
+            margin-bottom: 20px;
+        }
+
+        #game-over p {
+            color: #fff;
+            margin: 10px 0;
+            font-size: 0.7em;
+        }
+
+        #restart-btn {
+            margin-top: 20px;
+            padding: 15px 30px;
+            background: linear-gradient(145deg, #ffd700, #ffed4e);
+            border: none;
+            border-radius: 10px;
+            font-family: 'Press Start 2P', cursive;
+            font-size: 0.7em;
+            cursor: pointer;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            transition: all 0.2s;
+        }
+
+        #restart-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 7px 20px rgba(0, 0, 0, 0.4);
+        }
+
+        #restart-btn:active {
+            transform: translateY(0);
+        }
+
+        /* Instructions */
+        .instructions {
+            color: #88c0d0;
+            font-size: 0.5em;
+            text-align: center;
+            margin-top: 15px;
+            opacity: 0.8;
+        }
+    </style>
+</head>
+<body>
+    <!-- Background particles -->
+    <script>
+        for(let i = 0; i < 15; i++) {
+            const particle = document.createElement('div');
+            particle.className = 'bg-particle';
+            particle.style.width = Math.random() * 100 + 50 + 'px';
+            particle.style.height = particle.style.width;
+            particle.style.left = Math.random() * 100 + '%';
+            particle.style.top = Math.random() * 100 + '%';
+            particle.style.animationDelay = Math.random() * 20 + 's';
+            document.body.appendChild(particle);
+        }
+    </script>
+
+    <h1>🎯 TARGET BLASTER</h1>
+    
+    <div id="game-container">
+        <div id="hud">
+            <div class="stat">
+                <span class="stat-label">Score</span>
+                <span class="stat-value" id="score">0</span>
+            </div>
+            <div class="stat">
+                <span class="stat-label">Time</span>
+                <span class="stat-value" id="timer">30</span>
+            </div>
+            <div class="stat">
+                <span class="stat-label">Combo</span>
+                <span class="stat-value" id="combo">x1</span>
+            </div>
+        </div>
+        
+        <div id="game-area">
+            <div id="target">
+                <div class="target-core"></div>
+            </div>
+            
+            <div id="game-over">
+                <h2>GAME OVER!</h2>
+                <p>Final Score: <span id="final-score">0</span></p>
+                <p>Max Combo: <span id="max-combo">0</span></p>
+                <button id="restart-btn">PLAY AGAIN</button>
+            </div>
+        </div>
+        
+        <div class="instructions">
+            Click the targets as fast as you can! Build combos for more points!
+        </div>
+    </div>
+
+    <script>
+        let score = 0;
+        let combo = 1;
+        let maxCombo = 1;
+        let timeLeft = 30;
+        let gameActive = true;
+        let comboTimer = null;
+        let targetSize = 60;
+        
+        const scoreDisplay = document.getElementById("score");
+        const timerDisplay = document.getElementById("timer");
+        const comboDisplay = document.getElementById("combo");
+        const target = document.getElementById("target");
+        const gameArea = document.getElementById("game-area");
+        const gameOver = document.getElementById("game-over");
+        const finalScoreDisplay = document.getElementById("final-score");
+        const maxComboDisplay = document.getElementById("max-combo");
+        const restartBtn = document.getElementById("restart-btn");
+
+        // Move target to random position
+        function moveTarget() {
+            const maxX = 500 - targetSize;
+            const maxY = 600 - targetSize;
+            const newX = Math.random() * maxX;
+            const newY = Math.random() * maxY;
+            target.style.left = newX + 'px';
+            target.style.top = newY + 'px';
+        }
+
+        // Create click effect
+        function createClickEffect(x, y, points) {
+            const effect = document.createElement('div');
+            effect.className = 'click-effect';
+            effect.textContent = '+' + points;
+            effect.style.left = x + 'px';
+            effect.style.top = y + 'px';
+            gameArea.appendChild(effect);
+            setTimeout(() => effect.remove(), 1000);
+        }
+
+        // Create explosion effect
+        function createExplosion(x, y) {
+            const explosion = document.createElement('div');
+            explosion.className = 'explosion';
+            explosion.style.left = (x - 50) + 'px';
+            explosion.style.top = (y - 50) + 'px';
+            gameArea.appendChild(explosion);
+            setTimeout(() => explosion.remove(), 500);
+        }
+
+        // Reset combo after delay
+        function resetCombo() {
+            clearTimeout(comboTimer);
+            comboTimer = setTimeout(() => {
+                combo = 1;
+                comboDisplay.textContent = 'x' + combo;
+            }, 1500);
+        }
+
+        // Handle target click
+        target.addEventListener("click", function(e) {
+            if (!gameActive) return;
+
+            // Calculate points with combo
+            const points = 10 * combo;
+            score += points;
+            scoreDisplay.textContent = score;
+
+            // Increase combo
+            combo++;
+            if (combo > maxCombo) maxCombo = combo;
+            comboDisplay.textContent = 'x' + combo;
+
+            // Visual effects
+            const rect = target.getBoundingClientRect();
+            const gameRect = gameArea.getBoundingClientRect();
+            const x = rect.left - gameRect.left + targetSize / 2;
+            const y = rect.top - gameRect.top + targetSize / 2;
+            
+            createClickEffect(x, y, points);
+            createExplosion(x, y);
+
+            // Move target
+            moveTarget();
+
+            // Reset combo timer
+            resetCombo();
+
+            // Slight difficulty increase - make target smaller every 10 hits
+            if (score % 100 === 0 && targetSize > 30) {
+                targetSize -= 2;
+                target.style.width = targetSize + 'px';
+                target.style.height = targetSize + 'px';
+            }
+        });
+
+        // Game timer
+        const gameTimer = setInterval(() => {
+            if (!gameActive) return;
+            
+            timeLeft--;
+            timerDisplay.textContent = timeLeft;
+
+            if (timeLeft <= 0) {
+                endGame();
+            }
+        }, 1000);
+
+        // End game
+        function endGame() {
+            gameActive = false;
+            clearInterval(gameTimer);
+            target.style.display = 'none';
+            gameOver.style.display = 'block';
+            finalScoreDisplay.textContent = score;
+            maxComboDisplay.textContent = 'x' + maxCombo;
+        }
+
+        // Restart game
+        restartBtn.addEventListener('click', () => {
+            score = 0;
+            combo = 1;
+            maxCombo = 1;
+            timeLeft = 30;
+            targetSize = 60;
+            gameActive = true;
+            
+            scoreDisplay.textContent = '0';
+            timerDisplay.textContent = '30';
+            comboDisplay.textContent = 'x1';
+            target.style.width = targetSize + 'px';
+            target.style.height = targetSize + 'px';
+            target.style.display = 'block';
+            gameOver.style.display = 'none';
+            
+            moveTarget();
+            
+            const newGameTimer = setInterval(() => {
+                if (!gameActive) {
+                    clearInterval(newGameTimer);
+                    return;
+                }
+                
+                timeLeft--;
+                timerDisplay.textContent = timeLeft;
+
+                if (timeLeft <= 0) {
+                    endGame();
+                }
+            }, 1000);
+        });
+
+        // Initialize
+        moveTarget();
+    </script>
+</body>
+</html>
